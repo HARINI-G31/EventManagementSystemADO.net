@@ -136,36 +136,61 @@ namespace EventManagement.Repositories
         }
 
         // DELETE
+
         public int DeleteParticipant(string id)
         {
             using SqlConnection con = db.GetConnection();
             con.Open();
 
-            using SqlTransaction transaction = con.BeginTransaction();
+            using SqlTransaction transaction = con.BeginTransaction(
+                System.Data.IsolationLevel.Serializable);
 
             try
             {
-                string query1 = @"DELETE FROM Registrations
-                          WHERE ParticipantID = @id
-                          AND Status = 'Cancelled'";
+                // CHECK FOR REGISTERED OR ATTENDED REGISTRATIONS
+                string checkQuery = @"SELECT COUNT(*)
+                              FROM Registrations
+                              WHERE ParticipantID = @id
+                              AND (Status IS NULL
+                                   OR Status <> 'Cancelled')";
 
-                using SqlCommand cmd1 =
-                    new SqlCommand(query1, con, transaction);
+                using SqlCommand checkCmd =
+                    new SqlCommand(checkQuery, con, transaction);
 
-                cmd1.Parameters.AddWithValue("@id", id);
-                cmd1.ExecuteNonQuery();
+                checkCmd.Parameters.AddWithValue("@id", id);
 
-                string query2 =
+                int count = Convert.ToInt32(checkCmd.ExecuteScalar());
+
+                if (count > 0)
+                {
+                    transaction.Rollback();
+                    return -1;
+                }
+
+                // DELETE CANCELLED REGISTRATIONS
+                string deleteRegQuery = @"DELETE FROM Registrations
+                                  WHERE ParticipantID = @id
+                                  AND Status = 'Cancelled'";
+
+                using SqlCommand regCmd =
+                    new SqlCommand(deleteRegQuery, con, transaction);
+
+                regCmd.Parameters.AddWithValue("@id", id);
+                regCmd.ExecuteNonQuery();
+
+                // DELETE PARTICIPANT
+                string deleteParticipantQuery =
                     "DELETE FROM Participants WHERE ParticipantID = @id";
 
-                using SqlCommand cmd2 =
-                    new SqlCommand(query2, con, transaction);
+                using SqlCommand participantCmd =
+                    new SqlCommand(deleteParticipantQuery, con, transaction);
 
-                cmd2.Parameters.AddWithValue("@id", id);
+                participantCmd.Parameters.AddWithValue("@id", id);
 
-                int rows = cmd2.ExecuteNonQuery();
+                int rows = participantCmd.ExecuteNonQuery();
 
                 transaction.Commit();
+
                 return rows;
             }
             catch
@@ -174,5 +199,6 @@ namespace EventManagement.Repositories
                 throw;
             }
         }
+
     }
 }

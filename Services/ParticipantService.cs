@@ -157,22 +157,35 @@ namespace EventManagement.Services
         }
 
         // DELETE
+
         public void DeleteParticipant(string participantId)
         {
-            if (participantRepository.HasRegistrations(participantId))
+            if (string.IsNullOrWhiteSpace(participantId))
             {
-                Console.WriteLine(
-                    "Cannot delete participant. " +
-                    "Participant has existing registrations.");
+                Console.WriteLine("Participant ID cannot be empty.");
                 return;
             }
 
-            int rows = participantRepository.DeleteParticipant(participantId);
+            int result = participantRepository.DeleteParticipant(
+                participantId.Trim());
 
-            Console.WriteLine(rows > 0
-                ? "Participant deleted successfully!"
-                : "Participant not found!");
+            if (result == -1)
+            {
+                Console.WriteLine(
+                    "Cannot delete participant. " +
+                    "Registered or attended registrations exist.");
+            }
+            else if (result == 0)
+            {
+                Console.WriteLine("Participant not found.");
+            }
+            else
+            {
+                Console.WriteLine(
+                    "Participant and cancelled registrations deleted successfully!");
+            }
         }
+
 
         // GET ALL
         public List<Participant> GetAllParticipants()
