@@ -132,7 +132,7 @@ namespace EventManagement.Repositories
                 events.Add(e);
             }
 
-            return events;
+            return events; // filter events based on keyword in name or venue
         }
     }
 }
