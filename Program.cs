@@ -186,9 +186,10 @@ namespace EventManagement
                         break;
                     case 12:
                         Console.WriteLine("Enter Participant ID to delete:");
-                        string deleteParticipantId = Console.ReadLine();
+                        string deleteParticipantId = Console.ReadLine() ?? "";
+
                         participantService.DeleteParticipant(deleteParticipantId);
-                        break;  
+                        break;
 
                     case 13:
                         Console.WriteLine("Enter Registration ID to cancel:");

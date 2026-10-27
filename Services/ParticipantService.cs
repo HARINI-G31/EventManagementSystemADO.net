@@ -159,6 +159,14 @@ namespace EventManagement.Services
         // DELETE
         public void DeleteParticipant(string participantId)
         {
+            if (participantRepository.HasRegistrations(participantId))
+            {
+                Console.WriteLine(
+                    "Cannot delete participant. " +
+                    "Participant has existing registrations.");
+                return;
+            }
+
             int rows = participantRepository.DeleteParticipant(participantId);
 
             Console.WriteLine(rows > 0

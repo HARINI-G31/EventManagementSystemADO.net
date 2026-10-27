@@ -115,20 +115,64 @@ namespace EventManagement.Repositories
             con.Open();
             return cmd.ExecuteNonQuery();
         }
+        // CHECK PARTICIPANT REGISTRATIONS
+        public bool HasRegistrations(string participantId)
+        {
+            using SqlConnection con = db.GetConnection();
+
+            string query = @"SELECT COUNT(*)
+                     FROM Registrations
+                     WHERE ParticipantID = @id";
+
+            using SqlCommand cmd = new SqlCommand(query, con);
+
+            cmd.Parameters.AddWithValue("@id", participantId);
+
+            con.Open();
+
+            int count = Convert.ToInt32(cmd.ExecuteScalar());
+
+            return count > 0;
+        }
 
         // DELETE
         public int DeleteParticipant(string id)
         {
             using SqlConnection con = db.GetConnection();
-
-            string query = "DELETE FROM Participants WHERE ParticipantID = @id";
-
-            using SqlCommand cmd = new SqlCommand(query, con);
-
-            cmd.Parameters.AddWithValue("@id", id);
-
             con.Open();
-            return cmd.ExecuteNonQuery();
+
+            using SqlTransaction transaction = con.BeginTransaction();
+
+            try
+            {
+                string query1 = @"DELETE FROM Registrations
+                          WHERE ParticipantID = @id
+                          AND Status = 'Cancelled'";
+
+                using SqlCommand cmd1 =
+                    new SqlCommand(query1, con, transaction);
+
+                cmd1.Parameters.AddWithValue("@id", id);
+                cmd1.ExecuteNonQuery();
+
+                string query2 =
+                    "DELETE FROM Participants WHERE ParticipantID = @id";
+
+                using SqlCommand cmd2 =
+                    new SqlCommand(query2, con, transaction);
+
+                cmd2.Parameters.AddWithValue("@id", id);
+
+                int rows = cmd2.ExecuteNonQuery();
+
+                transaction.Commit();
+                return rows;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
     }
 }
