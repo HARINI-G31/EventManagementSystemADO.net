@@ -35,14 +35,6 @@ namespace EventManagement
                             participantService,
                             registrationService);
 
-            
-
-            
-
-            registrationService.LoadRegistrations(jsonUtility.LoadData<Registration>(registrationsFile));
-
-            Console.WriteLine("Saved data loaded successfully.");
-
             Console.WriteLine("Welcome to the Event Management System!\n");
             bool running = true;
             while(running)
@@ -232,9 +224,7 @@ namespace EventManagement
                         break;
                     case 21:
  
-                        jsonUtility.SaveData(
-                            registrationsFile,
-                            registrationService.GetAllRegistrations());
+                        
 
                         running = false;
 
