@@ -112,7 +112,7 @@ namespace EventManagement.Repositories
             cmd.Parameters.AddWithValue("@id", id);
 
             con.Open();
-            return cmd.ExecuteNonQuery();
+            return cmd.ExecuteNonQuery(); // cannot delete if there are foreign key constraints, handle exceptions in service layer
         }
     }
 }
