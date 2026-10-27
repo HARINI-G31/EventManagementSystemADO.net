@@ -197,7 +197,7 @@ namespace EventManagement.Repositories
             {
                 transaction.Rollback();
                 throw;
-            }
+            } // Exception handling can be improved based on specific requirements
         }
 
     }
