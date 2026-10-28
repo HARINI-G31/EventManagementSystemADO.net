@@ -12,6 +12,9 @@ namespace EventManagement.Services
         private readonly EventRepository eventRepository =
             new EventRepository();
 
+        private readonly AuditLogService auditService =
+            new AuditLogService();
+
         // CREATE
         public bool CreateEvent(Event newEvent)
         {
@@ -44,6 +47,15 @@ namespace EventManagement.Services
             }
 
             eventRepository.AddEvent(newEvent);
+
+            // AUDIT LOG - CREATE
+            auditService.LogAction(
+                "CREATE",
+                "Event",
+                newEvent.eventID,
+                "New event created successfully"
+            );
+
             Console.WriteLine("Event created successfully!");
             return true;
         }
@@ -77,8 +89,9 @@ namespace EventManagement.Services
 
             return eventRepository.GetAllEvents()
                 .FirstOrDefault(e =>
-                    e.eventID.Equals(eventId.Trim(),
-                    StringComparison.OrdinalIgnoreCase));
+                    e.eventID.Equals(
+                        eventId.Trim(),
+                        StringComparison.OrdinalIgnoreCase));
         }
 
         // SEARCH
@@ -90,7 +103,8 @@ namespace EventManagement.Services
                 return;
             }
 
-            List<Event> events = eventRepository.SearchEvent(keyword.Trim());
+            List<Event> events =
+                eventRepository.SearchEvent(keyword.Trim());
 
             if (events.Count == 0)
             {
@@ -135,30 +149,58 @@ namespace EventManagement.Services
             existingEvent.capacity = capacity;
             existingEvent.registrationFee = registrationFee;
 
-            int rows = eventRepository.UpdateEvent(existingEvent);
+            int rows =
+                eventRepository.UpdateEvent(existingEvent);
 
-            Console.WriteLine(rows > 0
-                ? "Event updated successfully!"
-                : "Event not found!");
+            if (rows > 0)
+            {
+                // AUDIT LOG - UPDATE
+                auditService.LogAction(
+                    "UPDATE",
+                    "Event",
+                    eventId,
+                    "Event details updated successfully"
+                );
+
+                Console.WriteLine("Event updated successfully!");
+            }
+            else
+            {
+                Console.WriteLine("Event not found!");
+            }
         }
 
         // DELETE
         public void DeleteEvent(string eventId)
         {
-            int rows = eventRepository.DeleteEvent(eventId);
+            int rows =
+                eventRepository.DeleteEvent(eventId);
 
-            Console.WriteLine(rows > 0
-                ? "Event deleted successfully!"
-                : "Event not found!");
+            if (rows > 0)
+            {
+                // AUDIT LOG - DELETE
+                auditService.LogAction(
+                    "DELETE",
+                    "Event",
+                    eventId,
+                    "Event deleted successfully"
+                );
+
+                Console.WriteLine("Event deleted successfully!");
+            }
+            else
+            {
+                Console.WriteLine("Event not found!");
+            }
         }
 
-        // USED BY OTHER SERVICES AND REPORTS
+        // GET ALL
         public List<Event> GetAllEvents()
         {
             return eventRepository.GetAllEvents();
         }
 
-        // RETAINED FOR EXISTING PROJECT COMPATIBILITY
+        // RETAINED FOR COMPATIBILITY
         public void LoadEvents(List<Event> loadedEvents)
         {
             // Events are now read directly from SQL Server.

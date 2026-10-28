@@ -7,7 +7,7 @@ namespace EventManagement.Repositories
     public class AuditLogRepository
     {
         private readonly string connectionString =
-            @"Server=.\SQLEXPRESS;Database=EventManagement;Integrated Security=True;TrustServerCertificate=True;";
+            @"Server=.\SQLEXPRESS;Database=EventManagementDB;Integrated Security=True;TrustServerCertificate=True;";
 
         public void AddAuditLog(AuditLog log)
         {

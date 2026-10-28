@@ -12,6 +12,9 @@ namespace EventManagement.Services
         private readonly ParticipantRepository participantRepository =
             new ParticipantRepository();
 
+        private readonly AuditLogService auditService =
+            new AuditLogService();
+
         // CREATE
         public bool RegisterParticipant(Participant participant)
         {
@@ -52,6 +55,14 @@ namespace EventManagement.Services
             }
 
             participantRepository.AddParticipant(participant);
+
+            // AUDIT LOG - CREATE
+            auditService.LogAction(
+                "CREATE",
+                "Participant",
+                participant.participantID,
+                "New participant registered successfully"
+            );
 
             Console.WriteLine("Participant registered successfully!");
             return true;
@@ -151,13 +162,25 @@ namespace EventManagement.Services
             int rows = participantRepository.UpdateParticipant(
                 existingParticipant);
 
-            Console.WriteLine(rows > 0
-                ? "Participant updated successfully!"
-                : "Participant not found!");
+            if (rows > 0)
+            {
+                // AUDIT LOG - UPDATE
+                auditService.LogAction(
+                    "UPDATE",
+                    "Participant",
+                    participantId,
+                    "Participant details updated successfully"
+                );
+
+                Console.WriteLine("Participant updated successfully!");
+            }
+            else
+            {
+                Console.WriteLine("Participant not found!");
+            }
         }
 
         // DELETE
-
         public void DeleteParticipant(string participantId)
         {
             if (string.IsNullOrWhiteSpace(participantId))
@@ -181,11 +204,18 @@ namespace EventManagement.Services
             }
             else
             {
+                // AUDIT LOG - DELETE
+                auditService.LogAction(
+                    "DELETE",
+                    "Participant",
+                    participantId.Trim(),
+                    "Participant and cancelled registrations deleted successfully"
+                );
+
                 Console.WriteLine(
                     "Participant and cancelled registrations deleted successfully!");
             }
         }
-
 
         // GET ALL
         public List<Participant> GetAllParticipants()
